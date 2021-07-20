@@ -1,6 +1,5 @@
 use crate::actors::redis_cache_actor::RedisCacheActor;
 use actix::Actor;
-use actix_web::web;
 use actix_web::web::ServiceConfig;
 use redis::aio::ConnectionManager;
 

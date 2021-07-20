@@ -32,7 +32,7 @@ pub struct SessionInfos {
     host_id: String,
     magnet_link: String,
     opened_at: SystemTime,
-    #[serde(skip)]
+    #[serde(skip_serializing_if = "String::is_empty")]
     pub revocation_token: String,
 }
 
@@ -97,8 +97,10 @@ impl RedisCacheActor {
     async fn retrieve_session(mut conn: ConnectionManager, id: String) -> HandlerResponse {
         let val: Option<String> = conn.get(&id).await?;
 
-        if let Some(session) = val {
-            Ok(serde_json::from_str(&session)?)
+        if let Some(session_raw) = val {
+            let mut session: SessionInfos = serde_json::from_str(&session_raw)?;
+            session.revocation_token.clear();
+            Ok(session)
         } else {
             Err(ConveyError::NotFound())
         }
@@ -112,7 +114,7 @@ impl Actor for RedisCacheActor {
 impl Handler<CacheMsg> for RedisCacheActor {
     type Result = ResponseFuture<HandlerResponse>;
 
-    fn handle(&mut self, msg: CacheMsg, ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: CacheMsg, _ctx: &mut Self::Context) -> Self::Result {
         let conn = self.conn.clone();
         Box::pin(async move {
             match msg {

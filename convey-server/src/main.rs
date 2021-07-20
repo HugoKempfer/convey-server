@@ -9,7 +9,7 @@ mod handlers;
 pub mod utils;
 
 async fn try_establish_redis_conn() -> RedisResult<ConnectionManager> {
-    let redis_url = std::env::var("REDIS_URL").unwrap_or("redis://127.0.0.1/".to_string());
+    let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1/".to_string());
     redis::aio::ConnectionManager::new(redis::Client::open(redis_url)?).await
 }
 
@@ -21,7 +21,7 @@ async fn main() -> std::io::Result<()> {
             HttpServer::new(move || {
                 App::new().configure(|cfg| {
                     handlers::config_handlers(cfg);
-                    actors::config_actors(cfg, conn.clone())
+                    actors::config_actors(cfg, conn.clone());
                 })
             })
             .bind("127.0.0.1:8080")?
