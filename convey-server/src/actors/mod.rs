@@ -1,4 +1,4 @@
-use crate::actors::redis_cache_actor::RedisCacheActor;
+use crate::actors::redis_cache_actor::{CacheMsg, RedisCacheActor};
 use actix::Actor;
 use actix_web::web::ServiceConfig;
 use redis::aio::ConnectionManager;
@@ -6,5 +6,7 @@ use redis::aio::ConnectionManager;
 pub mod redis_cache_actor;
 
 pub fn config_actors(cfg: &mut ServiceConfig, conn: ConnectionManager) {
-    cfg.data(RedisCacheActor::new(conn).start());
+    let cache_actor = RedisCacheActor::new(conn).start();
+    cfg.data(cache_actor.clone());
+    cfg.data(cache_actor.recipient::<CacheMsg>());
 }

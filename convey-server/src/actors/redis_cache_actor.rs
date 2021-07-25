@@ -6,12 +6,12 @@ use redis::AsyncCommands;
 use serde::{Deserialize, Serialize};
 
 use crate::errors::ConveyError;
-use crate::utils::is_magnet_link_valid;
+use crate::utils::{gen_token, is_magnet_link_valid};
 use redis::aio::ConnectionManager;
 
-type HandlerResponse = Result<SessionInfos, ConveyError>;
+pub type HandlerResponse = Result<SessionInfos, ConveyError>;
 
-#[derive(Message)]
+#[derive(Message, Clone)]
 #[rtype(result = "Result<SessionInfos, ConveyError>")]
 pub enum CacheMsg {
     OpenSession(OpenSessionReq),
@@ -19,43 +19,49 @@ pub enum CacheMsg {
     GetSessionInfos(String),
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct OpenSessionReq {
-    key: String,
-    host_id: String,
-    magnet_link: String,
+    pub(crate) key: String,
+    pub(crate) host_id: String,
+    pub(crate) magnet_link: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct SessionInfos {
-    key: String,
-    host_id: String,
-    magnet_link: String,
-    opened_at: SystemTime,
+    pub key: String,
+    pub host_id: String,
+    pub magnet_link: String,
+    pub opened_at: SystemTime,
     #[serde(skip_serializing_if = "String::is_empty")]
     pub revocation_token: String,
 }
 
-pub struct RedisCacheActor {
-    conn: redis::aio::ConnectionManager,
-}
-
-impl TryFrom<OpenSessionReq> for SessionInfos {
-    type Error = String;
-
-    fn try_from(req: OpenSessionReq) -> Result<SessionInfos, Self::Error> {
-        if !is_magnet_link_valid(req.magnet_link.as_str()) {
-            Err("Invalid magnet link.".to_string())
+impl SessionInfos {
+    pub fn try_new(key: String, host_id: String, magnet_link: String) -> Result<Self, ConveyError> {
+        if !is_magnet_link_valid(magnet_link.as_str()) {
+            Err(ConveyError::BadRequest("Invalid magnet link.".to_string()))
         } else {
             Ok(Self {
-                key: req.key,
-                host_id: req.host_id,
-                magnet_link: req.magnet_link,
+                key,
+                host_id,
+                magnet_link,
                 opened_at: SystemTime::now(),
-                revocation_token: "random".to_string(),
+                revocation_token: gen_token()?,
             })
         }
     }
+}
+
+impl TryFrom<OpenSessionReq> for SessionInfos {
+    type Error = ConveyError;
+
+    fn try_from(req: OpenSessionReq) -> Result<SessionInfos, Self::Error> {
+        Self::try_new(req.key, req.host_id, req.magnet_link)
+    }
+}
+
+pub struct RedisCacheActor {
+    conn: redis::aio::ConnectionManager,
 }
 
 impl RedisCacheActor {
@@ -69,13 +75,9 @@ impl RedisCacheActor {
         if key_exist == 1 {
             return Err(ConveyError::BadRequest("This session is already open.".to_string()));
         }
-        match SessionInfos::try_from(req) {
-            Ok(infos) => {
-                conn.set(&infos.key, serde_json::to_string(&infos)?).await?;
-                Ok(infos)
-            }
-            Err(err) => Err(ConveyError::BadRequest(err)),
-        }
+        let infos = SessionInfos::try_from(req)?;
+        conn.set(&infos.key, serde_json::to_string(&infos)?).await?;
+        Ok(infos)
     }
 
     async fn close_session(

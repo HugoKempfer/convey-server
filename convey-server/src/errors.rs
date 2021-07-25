@@ -21,6 +21,9 @@ pub enum ConveyError {
     #[error("Internal communication error")]
     MailboxError(#[from] actix::MailboxError),
 
+    #[error("Internal error")]
+    InternalError,
+
     #[error("{0}")]
     BadRequest(String),
 }
@@ -30,7 +33,8 @@ impl ResponseError for ConveyError {
         match *self {
             ConveyError::CacheError(_)
             | ConveyError::SerializationError(_)
-            | ConveyError::MailboxError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            | ConveyError::MailboxError(_)
+            | ConveyError::InternalError => StatusCode::INTERNAL_SERVER_ERROR,
             ConveyError::UnauthorizedError() => StatusCode::UNAUTHORIZED,
             ConveyError::BadRequest(_) => StatusCode::BAD_REQUEST,
             ConveyError::NotFound() => StatusCode::NOT_FOUND,

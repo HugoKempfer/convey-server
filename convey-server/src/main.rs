@@ -3,6 +3,9 @@ use log::*;
 use redis::aio::ConnectionManager;
 use redis::RedisResult;
 
+#[cfg(test)]
+extern crate fake;
+
 mod actors;
 pub mod errors;
 mod handlers;
