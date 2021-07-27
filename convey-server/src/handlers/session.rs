@@ -1,5 +1,5 @@
-use crate::actors::redis_cache_actor::CacheMsg::{CloseSession, GetSessionInfos, OpenSession};
-use crate::actors::redis_cache_actor::{CacheMsg, OpenSessionReq, RedisCacheActor, SessionInfos};
+use crate::actors::redis_cache_actor::SessionMsg::{CloseSession, GetSessionInfos, OpenSession};
+use crate::actors::redis_cache_actor::{OpenSessionReq, RedisCacheActor, SessionInfos, SessionMsg};
 use crate::errors::ConveyError;
 use actix::{Addr, Recipient};
 use actix_web::web::Json;
@@ -8,7 +8,7 @@ use actix_web::{delete, get, post, web, HttpResponse};
 #[post("")]
 pub async fn open_file_sharing_session(
     req: web::Json<OpenSessionReq>,
-    cache: web::Data<Recipient<CacheMsg>>,
+    cache: web::Data<Recipient<SessionMsg>>,
 ) -> Result<HttpResponse, ConveyError> {
     let session = cache.send(OpenSession(req.0)).await??;
 
@@ -20,7 +20,7 @@ pub async fn open_file_sharing_session(
 #[get("/{session_id}")]
 pub async fn get_session_infos(
     id: web::Path<String>,
-    cache: web::Data<Addr<RedisCacheActor>>,
+    cache: web::Data<Recipient<SessionMsg>>,
 ) -> Result<Json<SessionInfos>, ConveyError> {
     Ok(Json(cache.send(GetSessionInfos(id.0)).await??))
 }
@@ -28,7 +28,7 @@ pub async fn get_session_infos(
 #[delete("/{session_id}")]
 pub async fn close_session(
     id: web::Path<String>,
-    cache: web::Data<Addr<RedisCacheActor>>,
+    cache: web::Data<Recipient<SessionMsg>>,
     token: web::Json<String>,
 ) -> Result<Json<SessionInfos>, ConveyError> {
     Ok(Json(cache.send(CloseSession { id: id.0, revocation_token: token.0 }).await??))

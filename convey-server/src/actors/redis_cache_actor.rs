@@ -13,7 +13,7 @@ pub type HandlerResponse = Result<SessionInfos, ConveyError>;
 
 #[derive(Message, Clone)]
 #[rtype(result = "Result<SessionInfos, ConveyError>")]
-pub enum CacheMsg {
+pub enum SessionMsg {
     OpenSession(OpenSessionReq),
     CloseSession { id: String, revocation_token: String },
     GetSessionInfos(String),
@@ -39,16 +39,18 @@ pub struct SessionInfos {
 impl SessionInfos {
     pub fn try_new(key: String, host_id: String, magnet_link: String) -> Result<Self, ConveyError> {
         if !is_magnet_link_valid(magnet_link.as_str()) {
-            Err(ConveyError::BadRequest("Invalid magnet link.".to_string()))
-        } else {
-            Ok(Self {
-                key,
-                host_id,
-                magnet_link,
-                opened_at: SystemTime::now(),
-                revocation_token: gen_token()?,
-            })
+            return Err(ConveyError::BadRequest("Invalid magnet link.".to_string()));
         }
+        if key.is_empty() || host_id.is_empty() {
+            return Err(ConveyError::BadRequest("Bad ids.".to_string()));
+        }
+        Ok(Self {
+            key,
+            host_id,
+            magnet_link,
+            opened_at: SystemTime::now(),
+            revocation_token: gen_token()?,
+        })
     }
 }
 
@@ -113,18 +115,18 @@ impl Actor for RedisCacheActor {
     type Context = Context<Self>;
 }
 
-impl Handler<CacheMsg> for RedisCacheActor {
+impl Handler<SessionMsg> for RedisCacheActor {
     type Result = ResponseFuture<HandlerResponse>;
 
-    fn handle(&mut self, msg: CacheMsg, _ctx: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: SessionMsg, _ctx: &mut Self::Context) -> Self::Result {
         let conn = self.conn.clone();
         Box::pin(async move {
             match msg {
-                CacheMsg::OpenSession(req) => Self::open_session(conn, req).await,
-                CacheMsg::CloseSession { id, revocation_token } => {
+                SessionMsg::OpenSession(req) => Self::open_session(conn, req).await,
+                SessionMsg::CloseSession { id, revocation_token } => {
                     Self::close_session(conn, id, revocation_token).await
                 }
-                CacheMsg::GetSessionInfos(id) => Self::retrieve_session(conn, id).await,
+                SessionMsg::GetSessionInfos(id) => Self::retrieve_session(conn, id).await,
             }
         })
     }
