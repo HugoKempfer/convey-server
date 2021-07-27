@@ -1,0 +1,142 @@
+openapi: 3.1.0
+info:
+  title: ConveyAPI
+  version: '1.0'
+  summary: REST API for file sharing sessions management.
+  contact:
+    name: Hugo Kempfer
+    email: hugkempf@gmail.com
+  license:
+    name: GPL-3.0
+    url: 'https://github.com/HugoKempfer/convey-server/blob/main/LICENSE'
+servers:
+  - url: 'http://localhost:8080'
+    description: Dev server
+paths:
+  /sessions:
+    post:
+      summary: Open a new session
+      tags:
+        - sessions
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsInfos'
+        '400':
+          description: Bad Request
+      operationId: post-sessions
+      description: Endpoint used by initial peer to share infos about files and tracker swarm in a session.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              description: ''
+              type: object
+              x-examples:
+                example-1:
+                  key: dff
+                  host_id: wow
+                  magnet_link: 'magnet:?xt=urn:btih:c12fe1c06bba254a9dc9f519b335aa7c1367a88a'
+              properties:
+                key:
+                  type: string
+                  minLength: 1
+                  description: Client generated session-key
+                host_id:
+                  type: string
+                  minLength: 1
+                  description: Id of the file owner
+                magnet_link:
+                  type: string
+                  minLength: 1
+                  description: Valid magnet link
+              required:
+                - key
+                - host_id
+                - magnet_link
+  '/sessions/{key}':
+    parameters:
+      - schema:
+          type: string
+        name: key
+        in: path
+        required: true
+        description: Session key
+    get:
+      summary: Get session infos
+      tags:
+        - sessions
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionsInfos'
+        '404':
+          description: Not Found
+      operationId: get-sessions-key
+      description: 'If a client know a session key, he can retrieve its informations.'
+    delete:
+      summary: Close a session
+      tags:
+        - sessions
+      responses:
+        '200':
+          description: OK
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not Found
+      operationId: delete-sessions-key
+      description: The session owner can close it using the revocation token provided at open-time.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+              description: Revocation token
+              example: oP4fjH4KRKOqQvbJFnohf1nM5T2F9ZoZCBitsIuqkyM=
+components:
+  schemas:
+    SessionsInfos:
+      description: ''
+      type: object
+      x-examples:
+        example-1:
+          key: dff
+          host_id: wow
+          magnet_link: 'magnet:?xt=urn:btih:c12fe1c06bba254a9dc9f519b335aa7c1367a88a'
+          opened_at:
+            secs_since_epoch: 1627372351
+            nanos_since_epoch: 955416653
+          revocation_token: oP4fjH4KRKOqQvbJFnohf1nM5T2F9ZoZCBitsIuqkyM=
+      properties:
+        key:
+          type: string
+          minLength: 1
+          description: File sharing session identifier
+        host_id:
+          type: string
+          minLength: 1
+        magnet_link:
+          type: string
+          minLength: 1
+        opened_at:
+          type: object
+          properties:
+            secs_since_epoch:
+              type: number
+            nanos_since_epoch:
+              type: number
+        revocation_token:
+          type: string
+          minLength: 1
+          description: Token used by session owner to explicitly close it.
+      required:
+        - key
+        - host_id
+        - magnet_link
