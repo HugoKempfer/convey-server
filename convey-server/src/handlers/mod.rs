@@ -1,6 +1,6 @@
 use actix_web::{web, App, Scope};
 
-mod session;
+pub mod session;
 
 pub fn config_handlers(cfg: &mut web::ServiceConfig) {
     cfg.service(

@@ -6,9 +6,9 @@ use redis::RedisResult;
 #[cfg(test)]
 extern crate fake;
 
-mod actors;
+pub mod actors;
 pub mod errors;
-mod handlers;
+pub mod handlers;
 pub mod utils;
 
 async fn try_establish_redis_conn() -> RedisResult<ConnectionManager> {

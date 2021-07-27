@@ -129,3 +129,6 @@ impl Handler<CacheMsg> for RedisCacheActor {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {}

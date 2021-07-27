@@ -1,4 +1,5 @@
 use crate::errors::ConveyError;
+
 use crate::{actors, handlers};
 use actix_web::body::{Body, ResponseBody};
 use actix_web::web;
@@ -21,11 +22,13 @@ pub fn gen_token() -> Result<String, ConveyError> {
     }
 }
 
+#[cfg(test)]
 pub fn config_test_app(cfg: &mut web::ServiceConfig, conn: ConnectionManager) {
     actors::config_actors(cfg, conn);
     handlers::config_handlers(cfg);
 }
 
+#[cfg(test)]
 pub async fn redis_eq<P: Serialize>(conn: &mut ConnectionManager, key: &str, value: &P) -> bool {
     if let Ok(payload) = serde_json::to_string(&value) {
         let redis_val: RedisResult<String> = conn.get(key).await;
@@ -34,6 +37,13 @@ pub async fn redis_eq<P: Serialize>(conn: &mut ConnectionManager, key: &str, val
         }
     }
     false
+}
+
+#[cfg(test)]
+pub async fn redis_set<V: Serialize>(conn: &mut ConnectionManager, key: &str, value: &V) {
+    if let Ok(payload) = serde_json::to_string(&value) {
+        let _: RedisResult<()> = conn.set(key, payload).await;
+    }
 }
 
 pub trait BodyTest {
