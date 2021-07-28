@@ -13,7 +13,7 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-    container: node:10.18-jessie
+    container: rust:1.53.0
     services:
       redis:
         image: redis
