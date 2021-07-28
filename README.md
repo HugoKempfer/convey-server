@@ -16,5 +16,5 @@ It uses Redis as a cache, so there are no internal states.
 
 ## Testing
 
-To test the project there must be an open Redis instance running on your machine. This is used for integration tests. You can use the one provided in `docker-compose.yml` file.
+To test the project there must be an open Redis instance running on your machine. This is used for integration tests. You can use the one provided in `dev/docker-compose.yml` file.
 
