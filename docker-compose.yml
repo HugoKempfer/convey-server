@@ -4,8 +4,23 @@ services:
 
   redis:
     image: redis:latest
+    container_name: convey-redis
     ports:
       - '6379:6379'
     environment:
       REDIS_MASTER_HOST: master
       REDIS_MASTER_PORT_NUMBER: 6379
+
+  convey-server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: convey-server
+    restart: always
+    depends_on:
+      - redis
+    environment:
+      CONVEY-URL: 0.0.0.0
+      REDIS-URL: redis://redis/
+    ports:
+      - "8080:8080"

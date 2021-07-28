@@ -1,14 +1,23 @@
-FROM rust:1.53.0 as build
-ENV PKG_CONFIG_ALLOW_CROSS=1
-
-WORKDIR /usr/src/convey-server
+FROM lukemathwalker/cargo-chef:latest-rust-1.53.0 as planner
+WORKDIR app
 COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
 
-RUN cargo install --path .
+FROM lukemathwalker/cargo-chef:latest-rust-1.53.0 as cacher
+WORKDIR app
+COPY --from=planner /app/recipe.json recipe.json
+RUN cargo chef cook --release --recipe-path recipe.json
 
-FROM gcr.io/distroless/cc-debian10
+FROM rust:1.53.0 as builder
+WORKDIR app
+COPY . .
+# Copy over the cached dependencies
+COPY --from=cacher /app/target target
+COPY --from=cacher $CARGO_HOME $CARGO_HOME
+RUN cargo build --release --bin convey-server
 
-COPY --from=build /usr/local/cargo/bin/convey-server /usr/local/bin/convey-server
-
-ENV CONVEY-ADDR=0.0.0.0
-CMD ["convey-server"]
+FROM rust:1.53.0 as runtime
+WORKDIR app
+COPY --from=builder /app/target/release/convey-server /usr/local/bin
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/convey-server"]

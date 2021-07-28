@@ -14,7 +14,7 @@ pub mod utils;
 const DEFAULT_PORT: &str = "8080";
 
 async fn try_establish_redis_conn() -> RedisResult<ConnectionManager> {
-    let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| "redis://127.0.0.1/".to_string());
+    let redis_url = std::env::var("REDIS-URL").unwrap_or_else(|_| "redis://127.0.0.1/".to_string());
     redis::aio::ConnectionManager::new(redis::Client::open(redis_url)?).await
 }
 
