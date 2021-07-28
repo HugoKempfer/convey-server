@@ -6,9 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-env:
-  CARGO_TERM_COLOR: always
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +27,7 @@ jobs:
       - name: Run tests
         run: cargo test
         env:
-          REDIS-URL: "redis://redis/"
+          REDIS_URL: "redis://redis/"
 
       - run: rustup component add clippy
       - name: Annotate commit with clippy warnings

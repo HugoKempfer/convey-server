@@ -14,10 +14,11 @@ pub mod utils;
 const DEFAULT_PORT: &str = "8080";
 
 async fn try_establish_redis_conn() -> RedisResult<ConnectionManager> {
-    let redis_url = std::env::var("REDIS-URL").unwrap_or_else(|_| {
-        warn!("No environment variable REDIS-URL found. Using default value.");
+    let redis_url = std::env::var("REDIS_URL").unwrap_or_else(|_| {
+        warn!("No environment variable REDIS_URL found. Using default value.");
         "redis://127.0.0.1/".to_string()
     });
+    info!("Trying to establish redis connection on {}.", redis_url);
     redis::aio::ConnectionManager::new(redis::Client::open(redis_url)?).await
 }
 
@@ -32,7 +33,7 @@ fn setup_env_logger() {
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     setup_env_logger();
-    let server_url = std::env::var("CONVEY-URL").unwrap_or_else(|_| "127.0.0.1".to_string());
+    let server_url = std::env::var("CONVEY_URL").unwrap_or_else(|_| "127.0.0.1".to_string());
     info!("Starting server.");
     match try_establish_redis_conn().await {
         Ok(conn) => {
