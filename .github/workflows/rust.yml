@@ -30,7 +30,7 @@ jobs:
       - name: Run tests
         run: cargo test
         env:
-          REDIS-URL: redis://redis/
+          REDIS-URL: "redis://redis/"
 
       - run: rustup component add clippy
       - name: Annotate commit with clippy warnings
