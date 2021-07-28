@@ -1,0 +1,37 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: rust:1.53.0
+
+    services:
+      redis:
+        image: redis
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build
+        run: cargo build
+
+      - name: Cache Dependencies
+        uses: Swatinem/rust-cache@v1.2.0
+
+      - name: Run tests
+        run: cargo test
+        env:
+          REDIS_URL: "redis://redis/"
+
+      - run: rustup component add clippy
+      - name: Annotate commit with clippy warnings
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-features
