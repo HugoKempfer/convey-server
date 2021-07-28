@@ -1,0 +1,36 @@
+name: Rust
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    container: node:10.18-jessie
+    services:
+      redis:
+        image: redis
+        
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    
+    - name: Cache Dependencies
+    - uses: Swatinem/rust-cache@v1.2.0
+    
+    - name: Annotate commit with clippy warnings
+    - uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all-features
+    
+    - name: Run tests
+      run: cargo test --verbose
