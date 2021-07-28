@@ -36,3 +36,5 @@ jobs:
 
     - name: Run tests
       run: cargo test --verbose
+      env:
+        REDIS-URL: redis://redis/
