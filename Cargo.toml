@@ -14,7 +14,7 @@ redis = {version = "0.20.2", features = ["acl", "connection-manager", "aio", "as
 actix = "0.10"
 actix-web = "3.3.2"
 actix-rt = "1.1.1"
-actix-service = "1.0.6"
+actix-service = "2.0.0"
 rand = "0.8.4"
 base64 = "0.13.0"
 lazy_static = "1.4.0"
