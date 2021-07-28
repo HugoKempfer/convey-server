@@ -2,7 +2,7 @@
 
 This repository holds the session server for the convey app.
 
-See [MOTIVATIONS.md](https://github.com/HugoKempfer/convey-server/blob/main/README.md).
+See [MOTIVATIONS.md](https://github.com/HugoKempfer/convey-server/blob/main/MOTIVATIONS.md).
 
 Documentation and specification on this server can be found under the OpenAPI3 format in the `spec/` folder.
 
