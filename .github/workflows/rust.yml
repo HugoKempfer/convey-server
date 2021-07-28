@@ -19,8 +19,9 @@ jobs:
         image: redis
 
     steps:
+    - uses: actions/checkout@v2
+
     - name: Build
-      uses: actions/checkout@v2
       run: cargo build --verbose
 
     - name: Cache Dependencies
