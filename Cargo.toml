@@ -13,7 +13,7 @@ thiserror = "1.0.26"
 redis = {version = "0.21.0", features = ["acl", "connection-manager", "aio", "async-std-comp"]}
 actix = "0.10"
 actix-web = "3.3.2"
-actix-rt = "1.1.1"
+actix-rt = "2.3.0"
 actix-service = "2.0.0"
 rand = "0.8.4"
 base64 = "0.13.0"
